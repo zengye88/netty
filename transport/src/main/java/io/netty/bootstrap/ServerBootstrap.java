@@ -70,10 +70,9 @@ public final class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, Se
     }
 
     /**
-     * The {@link Class} which is used to create {@link Channel} instances from.
-     * You either use this or {@link #channelFactory(ServerChannelFactory)} if your
-     * {@link Channel} implementation has no no-args constructor.
-     */
+	 * Netty 通过 Channel 工厂类来创建不同类型的 Channel，对于服务端，需要创建 NioServerSocketChannel,
+	 * {@link Channel} implementation has no no-args constructor.
+	 */
     public ServerBootstrap channel(Class<? extends ServerChannel> channelClass) {
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
@@ -194,6 +193,7 @@ public final class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, Se
     @Override
     void init(Channel channel) throws Exception {
         final Map<ChannelOption<?>, Object> options = options();
+        //设置 Socket 参数和 NioServerSocketChannel 的附加属性，
         synchronized (options) {
             channel.config().setOptions(options);
         }
@@ -206,7 +206,7 @@ public final class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, Se
                 channel.attr(key).set(e.getValue());
             }
         }
-
+//将 AbstractBootstrap 的 Handler 添加到 NioServerSocketChannel 的 PipeLine中
         ChannelPipeline p = channel.pipeline();
         if (handler() != null) {
             p.addLast(handler());
@@ -225,6 +225,7 @@ public final class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, Se
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(Channel ch) throws Exception {
+            	//将用于服务端注册的 Handler --ServerBootstrapAcceptor 添加到 PipeLine 中，代码如下
                 ch.pipeline().addLast(new ServerBootstrapAcceptor(currentChildHandler, currentChildOptions,
                         currentChildAttrs));
             }
